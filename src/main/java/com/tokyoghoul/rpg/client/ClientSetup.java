@@ -36,10 +36,12 @@ public final class ClientSetup {
     private ClientSetup() {
     }
 
-  public static void init() {
-    net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext.get()
-            .getModEventBus()
-            .register(ClientSetup.class);
+public static void init() {
+    var modBus = net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext.get()
+            .getModEventBus();
+
+    modBus.addListener(ClientSetup::renderers);
+    modBus.addListener(ClientSetup::keys);
 
     net.minecraftforge.common.MinecraftForge.EVENT_BUS.register(ClientSetup.class);
 }
