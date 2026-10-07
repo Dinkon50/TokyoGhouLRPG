@@ -118,7 +118,8 @@ public final class ClientSetup {
         event.register(ABILITY_THREE);
     }
 
-    @SubscribeEvent
+    @SubscribeEvent 
+    
 public static void input(InputEvent.Key event) {
 
         if (event.getAction() != GLFW.GLFW_PRESS) {
