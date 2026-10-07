@@ -1,6 +1,7 @@
 package com.tokyoghoul.rpg.client;
 
 import com.mojang.blaze3d.platform.InputConstants;
+import com.tokyoghoul.rpg.TokyoGhoulRPG;
 import com.tokyoghoul.rpg.capability.GhoulData;
 import com.tokyoghoul.rpg.entity.ModEntities;
 import com.tokyoghoul.rpg.network.AbilityPacket;
@@ -19,9 +20,7 @@ import net.minecraftforge.client.event.InputEvent;
 import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
 import net.minecraftforge.client.event.RenderGuiOverlayEvent;
 import net.minecraftforge.client.gui.overlay.VanillaGuiOverlay;
-import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 
 import org.lwjgl.glfw.GLFW;
 
@@ -34,17 +33,15 @@ public final class ClientSetup {
     public static KeyMapping ABILITY_TWO;
     public static KeyMapping ABILITY_THREE;
 
-    public static void init() {
-        FMLJavaModLoadingContext.get()
-                .getModEventBus()
-                .register(ClientSetup.class);
+    private ClientSetup() {
+    }
 
-        MinecraftForge.EVENT_BUS.register(ForgeEvents.class);
+    public static void init() {
+        TokyoGhoulRPG.EVENT_BUS.register(ClientSetup.class);
     }
 
     @SubscribeEvent
     public static void renderers(EntityRenderersEvent.RegisterRenderers event) {
-
         event.registerEntityRenderer(
                 ModEntities.GHOUL_NPC.get(),
                 ctx -> new SimpleHumanoidRenderer<>(
@@ -69,7 +66,7 @@ public final class ClientSetup {
     }
 
     @SubscribeEvent
-    public static void keys(RegisterKeyMappingsEvent event) {
+    public static void registerKeys(RegisterKeyMappingsEvent event) {
 
         KAGUNE = new KeyMapping(
                 "key.tokyoghoulrpg.kagune",
@@ -116,192 +113,150 @@ public final class ClientSetup {
         event.register(KAGUNE);
         event.register(PROGRESSION);
         event.register(RAGE);
-14:15
-event.register(ABILITY_ONE);
+        event.register(ABILITY_ONE);
         event.register(ABILITY_TWO);
         event.register(ABILITY_THREE);
     }
 
-    public static final class ForgeEvents {
+    @SubscribeEvent
+14:20
+public static void input(InputEvent.Key event) {
 
-        private ForgeEvents() {
+        if (event.getAction() != GLFW.GLFW_PRESS) {
+            return;
         }
 
-        @SubscribeEvent
-        public static void input(InputEvent.Key event) {
-
-            if (event.getAction() != GLFW.GLFW_PRESS) {
-                return;
-            }
-
-            if (KAGUNE != null
-                    && KAGUNE.matches(event.getKey(), event.getScanCode())) {
-
-                NetworkHandler.CHANNEL.sendToServer(
-                        new KagunePacket()
-                );
-            }
-
-            if (PROGRESSION != null
-                    && PROGRESSION.matches(event.getKey(), event.getScanCode())) {
-
-                Minecraft.getInstance().setScreen(
-                        new ProgressionScreen()
-                );
-            }
-
-            if (RAGE != null
-                    && RAGE.matches(event.getKey(), event.getScanCode())) {
-
-                NetworkHandler.CHANNEL.sendToServer(
-                        new RagePacket()
-                );
-            }
-
-            if (ABILITY_ONE != null
-                    && ABILITY_ONE.matches(event.getKey(), event.getScanCode())) {
-
-                NetworkHandler.CHANNEL.sendToServer(
-                        new AbilityPacket(0)
-                );
-            }
-
-            if (ABILITY_TWO != null
-                    && ABILITY_TWO.matches(event.getKey(), event.getScanCode())) {
-
-                NetworkHandler.CHANNEL.sendToServer(
-                        new AbilityPacket(1)
-                );
-            }
-
-            if (ABILITY_THREE != null
-                    && ABILITY_THREE.matches(event.getKey(), event.getScanCode())) {
-
-                NetworkHandler.CHANNEL.sendToServer(
-                        new AbilityPacket(2)
-                );
-            }
+        if (KAGUNE != null && KAGUNE.matches(event.getKey(), event.getScanCode())) {
+            NetworkHandler.CHANNEL.sendToServer(new KagunePacket());
         }
 
-        @SubscribeEvent
-        public static void overlay(RenderGuiOverlayEvent.Post event) {
+        if (PROGRESSION != null && PROGRESSION.matches(event.getKey(), event.getScanCode())) {
+            Minecraft.getInstance().setScreen(new ProgressionScreen());
+        }
 
-            if (event.getOverlay() != VanillaGuiOverlay.HOTBAR.type()) {
-                return;
-            }
+        if (RAGE != null && RAGE.matches(event.getKey(), event.getScanCode())) {
+            NetworkHandler.CHANNEL.sendToServer(new RagePacket());
+        }
 
-            Minecraft mc = Minecraft.getInstance();
+        if (ABILITY_ONE != null && ABILITY_ONE.matches(event.getKey(), event.getScanCode())) {
+            NetworkHandler.CHANNEL.sendToServer(new AbilityPacket(0));
+        }
 
-            if (mc.player == null) {
-                return;
-            }
+        if (ABILITY_TWO != null && ABILITY_TWO.matches(event.getKey(), event.getScanCode())) {
+            NetworkHandler.CHANNEL.sendToServer(new AbilityPacket(1));
+        }
 
-            if (ClientGhoulData.race() == GhoulData.Race.HUMAN) {
-                return;
-            }
-
-            GuiGraphics g = event.getGuiGraphics();
-
-            int x = mc.getWindow().getGuiScaledWidth() / 2 - 105;
-            int y = mc.getWindow().getGuiScaledHeight() - 58;
-
-            int w = 210;
-            int h = 12;
-
-            g.fill(
-                    x - 1,
-                    y - 1,
-                    x + w + 1,
-                    y + h + 1,
-                    0xFF111111
-            );
-
-            g.fill(
-                    x,
-                    y,
-                    x + w,
-                    y + h,
-                    0xFF333333
-            );
-
-            int fill = (int) (
-                    w * (ClientGhoulData.rage() / 100.0f)
-            );
-
-            if (fill > 0) {
-                g.fill(
-                        x,
-                        y,
-                        x + fill,
-                        y + h,
-                        ClientGhoulData.race() == GhoulData.Race.CCG
-                                ? 0xFF2580C8
-                                : 0xFFE51C3A
-                );
-            }
-
-            String race = switch (ClientGhoulData.race()) {
-                case GHOUL -> "ГУЛЬ";
-                case HALF_GHOUL -> "ПОЛУГУЛЬ";
-                case CCG -> "CCG";
-                default -> "ЧЕЛОВЕК";
-            };
-
-            String meter;
-
-            if (ClientGhoulData.rageActive()) {
-
-                meter =
-                        (ClientGhoulData.race() == GhoulData.Race.CCG
-                                ? "БОЕВОЙ ДУХ — "
-                                : "ЯРОСТЬ — ")
-                        + Math.max(
-                                0,
-14:15
-ClientGhoulData.rageTicks() / 20
-                        )
-                        + "с";
-
-            } else {
-
-                meter =
-                        (ClientGhoulData.race() == GhoulData.Race.CCG
-                                ? "Боевой дух: "
-                                : "Ярость: ")
-                        + ClientGhoulData.rage()
-                        + "%";
-            }
-
-            g.drawString(
-                    mc.font,
-                    race + " | Уровень "
-                            + ClientGhoulData.level(),
-                    x,
-                    y - 23,
-                    0xFFFFFFFF,
-                    true
-            );
-
-            g.drawString(
-                    mc.font,
-                    meter,
-                    x,
-                    y - 11,
-                    0xFFFFFFFF,
-                    true
-            );
-
-            g.drawString(
-                    mc.font,
-                    "Q: способность   E: рывок   F: восстановление",
-                    x,
-                    y + 15,
-                    0xFFDDDDDD,
-                    false
-            );
+        if (ABILITY_THREE != null && ABILITY_THREE.matches(event.getKey(), event.getScanCode())) {
+            NetworkHandler.CHANNEL.sendToServer(new AbilityPacket(2));
         }
     }
 
-    private ClientSetup() {
+    @SubscribeEvent
+    public static void overlay(RenderGuiOverlayEvent.Post event) {
+
+        if (event.getOverlay() != VanillaGuiOverlay.HOTBAR.type()) {
+            return;
+        }
+
+        Minecraft mc = Minecraft.getInstance();
+
+        if (mc.player == null) {
+            return;
+        }
+
+        if (ClientGhoulData.race() == GhoulData.Race.HUMAN) {
+            return;
+        }
+
+        GuiGraphics graphics = event.getGuiGraphics();
+
+        int x = mc.getWindow().getGuiScaledWidth() / 2 - 105;
+        int y = mc.getWindow().getGuiScaledHeight() - 58;
+
+        int width = 210;
+        int height = 12;
+
+        graphics.fill(
+                x - 1,
+                y - 1,
+                x + width + 1,
+                y + height + 1,
+                0xFF111111
+        );
+
+        graphics.fill(
+                x,
+                y,
+                x + width,
+                y + height,
+                0xFF333333
+        );
+
+        int fill = (int) (width * (ClientGhoulData.rage() / 100.0f));
+
+        if (fill > 0) {
+            graphics.fill(
+                    x,
+                    y,
+                    x + fill,
+                    y + height,
+                    ClientGhoulData.race() == GhoulData.Race.CCG
+                            ? 0xFF2580C8
+                            : 0xFFE51C3A
+            );
+        }
+
+        String race = switch (ClientGhoulData.race()) {
+            case GHOUL -> "ГУЛЬ";
+            case HALF_GHOUL -> "ПОЛУГУЛЬ";
+            case CCG -> "CCG";
+            default -> "ЧЕЛОВЕК";
+        };
+
+        String meter;
+
+        if (ClientGhoulData.rageActive()) {
+            meter = ClientGhoulData.race() == GhoulData.Race.CCG
+                    ? "БОЕВОЙ ДУХ — "
+                    : "ЯРОСТЬ — ";
+
+            meter += Math.max(
+                    0,
+                    ClientGhoulData.rageTicks() / 20
+            ) + "с";
+        } else {
+            meter = ClientGhoulData.race() == GhoulData.Race.CCG
+                    ? "Боевой дух: "
+                    : "Ярость: ";
+
+            meter += ClientGhoulData.rage() + "%";
+        }
+
+        graphics.drawString(
+                mc.font,
+                race + " | Уровень " + ClientGhoulData.level(),
+                x,
+                y - 23,
+                0xFFFFFFFF,
+                true
+        );
+
+        graphics.drawString(
+                mc.font,
+                meter,
+                x,
+                y - 11,
+                0xFFFFFFFF,
+                true
+        );
+
+        graphics.drawString(
+                mc.font,
+                "Q: способность  E: рывок  F: восстановление",
+                x,
+                y + 15,
+                0xFFDDDDDD,
+                false
+        );
     }
 }
