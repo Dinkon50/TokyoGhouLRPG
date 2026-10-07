@@ -119,7 +119,6 @@ public final class ClientSetup {
     }
 
     @SubscribeEvent
-14:20
 public static void input(InputEvent.Key event) {
 
         if (event.getAction() != GLFW.GLFW_PRESS) {
