@@ -36,9 +36,13 @@ public final class ClientSetup {
     private ClientSetup() {
     }
 
-    public static void init() {
-        TokyoGhoulRPG.EVENT_BUS.register(ClientSetup.class);
-    }
+  public static void init() {
+    net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext.get()
+            .getModEventBus()
+            .register(ClientSetup.class);
+
+    net.minecraftforge.common.MinecraftForge.EVENT_BUS.register(ClientSetup.class);
+}
 
     @SubscribeEvent
     public static void renderers(EntityRenderersEvent.RegisterRenderers event) {
