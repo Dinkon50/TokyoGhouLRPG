@@ -1,7 +1,6 @@
 package com.tokyoghoul.rpg.client;
 
 import com.mojang.blaze3d.platform.InputConstants;
-import com.tokyoghoul.rpg.TokyoGhoulRPG;
 import com.tokyoghoul.rpg.capability.GhoulData;
 import com.tokyoghoul.rpg.entity.ModEntities;
 import com.tokyoghoul.rpg.network.AbilityPacket;
@@ -36,19 +35,13 @@ public final class ClientSetup {
     public static KeyMapping ABILITY_THREE;
 
     public static void init() {
-
-        // События мод-шины
         FMLJavaModLoadingContext.get()
                 .getModEventBus()
                 .register(ClientSetup.class);
 
-        // События обычной Forge-шины
         MinecraftForge.EVENT_BUS.register(ForgeEvents.class);
     }
 
-    /**
-     * Регистрация рендереров NPC.
-     */
     @SubscribeEvent
     public static void renderers(EntityRenderersEvent.RegisterRenderers event) {
 
@@ -75,9 +68,6 @@ public final class ClientSetup {
         );
     }
 
-    /**
-     * Регистрация клавиш.
-     */
     @SubscribeEvent
     public static void keys(RegisterKeyMappingsEvent event) {
 
@@ -119,25 +109,19 @@ public final class ClientSetup {
         ABILITY_THREE = new KeyMapping(
                 "key.tokyoghoulrpg.ability_three",
                 InputConstants.Type.KEYSYM,
-14:07
-GLFW.GLFW_KEY_F,
+                GLFW.GLFW_KEY_F,
                 "key.categories.tokyoghoulrpg"
         );
 
         event.register(KAGUNE);
         event.register(PROGRESSION);
         event.register(RAGE);
-        event.register(ABILITY_ONE);
+14:15
+event.register(ABILITY_ONE);
         event.register(ABILITY_TWO);
         event.register(ABILITY_THREE);
     }
 
-    /**
-     * События обычной Forge Event Bus.
-     *
-     * Сюда вынесены InputEvent.Key и RenderGuiOverlayEvent,
-     * потому что они НЕ являются ModBusEvent.
-     */
     public static final class ForgeEvents {
 
         private ForgeEvents() {
@@ -150,48 +134,48 @@ GLFW.GLFW_KEY_F,
                 return;
             }
 
-            if (KAGUNE != null &&
-                    KAGUNE.matches(event.getKey(), event.getScanCode())) {
+            if (KAGUNE != null
+                    && KAGUNE.matches(event.getKey(), event.getScanCode())) {
 
                 NetworkHandler.CHANNEL.sendToServer(
                         new KagunePacket()
                 );
             }
 
-            if (PROGRESSION != null &&
-                    PROGRESSION.matches(event.getKey(), event.getScanCode())) {
+            if (PROGRESSION != null
+                    && PROGRESSION.matches(event.getKey(), event.getScanCode())) {
 
                 Minecraft.getInstance().setScreen(
                         new ProgressionScreen()
                 );
             }
 
-            if (RAGE != null &&
-                    RAGE.matches(event.getKey(), event.getScanCode())) {
+            if (RAGE != null
+                    && RAGE.matches(event.getKey(), event.getScanCode())) {
 
                 NetworkHandler.CHANNEL.sendToServer(
                         new RagePacket()
                 );
             }
 
-            if (ABILITY_ONE != null &&
-                    ABILITY_ONE.matches(event.getKey(), event.getScanCode())) {
+            if (ABILITY_ONE != null
+                    && ABILITY_ONE.matches(event.getKey(), event.getScanCode())) {
 
                 NetworkHandler.CHANNEL.sendToServer(
                         new AbilityPacket(0)
                 );
             }
 
-            if (ABILITY_TWO != null &&
-                    ABILITY_TWO.matches(event.getKey(), event.getScanCode())) {
+            if (ABILITY_TWO != null
+                    && ABILITY_TWO.matches(event.getKey(), event.getScanCode())) {
 
                 NetworkHandler.CHANNEL.sendToServer(
                         new AbilityPacket(1)
                 );
             }
 
-            if (ABILITY_THREE != null &&
-                    ABILITY_THREE.matches(event.getKey(), event.getScanCode())) {
+            if (ABILITY_THREE != null
+                    && ABILITY_THREE.matches(event.getKey(), event.getScanCode())) {
 
                 NetworkHandler.CHANNEL.sendToServer(
                         new AbilityPacket(2)
@@ -224,7 +208,6 @@ GLFW.GLFW_KEY_F,
             int w = 210;
             int h = 12;
 
-            // Фон шкалы
             g.fill(
                     x - 1,
                     y - 1,
@@ -233,7 +216,6 @@ GLFW.GLFW_KEY_F,
                     0xFF111111
             );
 
-            // Пустая шкала
             g.fill(
                     x,
                     y,
@@ -242,7 +224,9 @@ GLFW.GLFW_KEY_F,
                     0xFF333333
             );
 
-            int fill = (int) (w * (ClientGhoulData.rage() / 100.0f));
+            int fill = (int) (
+                    w * (ClientGhoulData.rage() / 100.0f)
+            );
 
             if (fill > 0) {
                 g.fill(
@@ -262,25 +246,31 @@ GLFW.GLFW_KEY_F,
                 case CCG -> "CCG";
                 default -> "ЧЕЛОВЕК";
             };
-14:07
-String meter = ClientGhoulData.rageActive()
-                    ? (
-                        ClientGhoulData.race() == GhoulData.Race.CCG
+
+            String meter;
+
+            if (ClientGhoulData.rageActive()) {
+
+                meter =
+                        (ClientGhoulData.race() == GhoulData.Race.CCG
                                 ? "БОЕВОЙ ДУХ — "
-                                : "ЯРОСТЬ — "
-                      )
-                      + Math.max(
-                            0,
-                            ClientGhoulData.rageTicks() / 20
-                      )
-                      + "с"
-                    : (
-                        ClientGhoulData.race() == GhoulData.Race.CCG
+                                : "ЯРОСТЬ — ")
+                        + Math.max(
+                                0,
+14:15
+ClientGhoulData.rageTicks() / 20
+                        )
+                        + "с";
+
+            } else {
+
+                meter =
+                        (ClientGhoulData.race() == GhoulData.Race.CCG
                                 ? "Боевой дух: "
-                                : "Ярость: "
-                      )
-                      + ClientGhoulData.rage()
-                      + "%";
+                                : "Ярость: ")
+                        + ClientGhoulData.rage()
+                        + "%";
+            }
 
             g.drawString(
                     mc.font,
